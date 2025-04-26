@@ -1,0 +1,108 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'detector/css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>System Dashboard</h1>
+        <div class="dashboard-actions">
+            <button id="refreshBtn" class="button">Refresh Data</button>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- System Health Card -->
+        <div class="dashboard-card">
+            <h2>System Health</h2>
+            <div class="card-content" id="systemHealth">
+                <div class="metric">
+                    <label>CPU Usage:</label>
+                    <span id="cpuUsage">Loading...</span>
+                </div>
+                <div class="metric">
+                    <label>Memory Usage:</label>
+                    <span id="memoryUsage">Loading...</span>
+                </div>
+                <div class="metric">
+                    <label>Uptime:</label>
+                    <span id="uptime">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Storage Card -->
+        <div class="dashboard-card">
+            <h2>Storage</h2>
+            <div class="card-content" id="storage">
+                <div class="metric">
+                    <label>Media Storage:</label>
+                    <span id="mediaStorage">Loading...</span>
+                </div>
+                <div class="metric">
+                    <label>Backup Storage:</label>
+                    <span id="backupStorage">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Background Tasks Card -->
+        <div class="dashboard-card">
+            <h2>Background Tasks</h2>
+            <div class="card-content" id="tasks">
+                <!-- Cleanup Task -->
+                <div class="task-status">
+                    <h3>Cleanup Task</h3>
+                    <div class="metric">
+                        <label>Status:</label>
+                        <span id="cleanupStatus">Loading...</span>
+                    </div>
+                    <div class="metric">
+                        <label>Last Run:</label>
+                        <span id="cleanupLastRun">Loading...</span>
+                    </div>
+                    <div class="metric error-message" id="cleanupError"></div>
+                </div>
+
+                <!-- Backup Task -->
+                <div class="task-status">
+                    <h3>Backup Task</h3>
+                    <div class="metric">
+                        <label>Status:</label>
+                        <span id="backupStatus">Loading...</span>
+                    </div>
+                    <div class="metric">
+                        <label>Last Run:</label>
+                        <span id="backupLastRun">Loading...</span>
+                    </div>
+                    <div class="metric error-message" id="backupError"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cache Status Card -->
+        <div class="dashboard-card">
+            <h2>Cache Status</h2>
+            <div class="card-content" id="cacheStatus">
+                <div class="metric">
+                    <label>Backend:</label>
+                    <span id="cacheBackend">Loading...</span>
+                </div>
+                <div class="metric">
+                    <label>Status:</label>
+                    <span id="cacheHealth">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+<script src="{% static 'detector/js/admin-dashboard.js' %}"></script>
+{% endblock %}

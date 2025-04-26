@@ -1,0 +1,26 @@
+{% extends "detector/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-page">
+                <h1 class="display-1 text-muted">500</h1>
+                <h2 class="mb-4">Server Error</h2>
+                <p class="lead mb-4">Sorry, something went wrong on our end. We're working to fix it.</p>
+                <div class="mb-4">
+                    <p>Try these options:</p>
+                    <ul class="list-unstyled">
+                        <li>Refresh the page</li>
+                        <li>Try again in a few minutes</li>
+                        <li>Clear your browser cache</li>
+                    </ul>
+                </div>
+                <a href="{% url 'home' %}" class="btn btn-primary">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

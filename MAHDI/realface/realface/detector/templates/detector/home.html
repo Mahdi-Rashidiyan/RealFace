@@ -1,0 +1,79 @@
+{% extends "detector/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Image Analysis</h3>
+                </div>
+                <div class="card-body">
+                    <div class="upload-info alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <ul class="mb-0">
+                            <li>Supported formats: JPEG, PNG, WebP</li>
+                            <li>Maximum file size: 10MB</li>
+                            <li>For best results, use clear, high-quality images</li>
+                        </ul>
+                    </div>
+
+                    <form id="upload-form" class="text-center">
+                        {% csrf_token %}
+                        <div class="upload-area" id="drop-area">
+                            <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp" class="d-none">
+                            <div class="upload-prompt">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Drag and drop an image here or click to upload</p>
+                                <small class="text-muted">The image will be processed securely on our servers</small>
+                            </div>
+                            <div class="preview-container d-none">
+                                <img id="preview-image" class="img-fluid">
+                                <div class="image-info mt-2">
+                                    <p class="file-name mb-1"></p>
+                                    <p class="file-size mb-1"></p>
+                                    <p class="image-dimensions mb-0"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="upload-error alert alert-danger d-none">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span class="error-message"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3" id="analyze-btn" disabled>
+                            <i class="fas fa-search"></i> Analyze Image
+                        </button>
+                    </form>
+
+                    <div id="result-section" class="mt-4 d-none">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title text-center mb-4">Analysis Results</h4>
+                                <div class="result-content">
+                                    <p class="result-text text-center fs-5"></p>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar"></div>
+                                    </div>
+                                    <p class="confidence-text text-center mt-2"></p>
+                                    <div class="technical-details mt-3">
+                                        <h5>Technical Details</h5>
+                                        <ul class="list-unstyled">
+                                            <li><strong>File Size:</strong> <span class="details-size"></span></li>
+                                            <li><strong>Dimensions:</strong> <span class="details-dimensions"></span></li>
+                                            <li><strong>Original Filename:</strong> <span class="details-filename"></span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/detector/js/main.js"></script>
+{% endblock %}

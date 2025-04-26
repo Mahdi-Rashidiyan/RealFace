@@ -1,0 +1,45 @@
+# Python
+*.py[cod]
+__pycache__/
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media
+static
+
+# Environment variables
+.env
+.venv
+.settings/
+.django_secret
+.fernet_key
+
+# VS Code
+.vscode/
+
+# Docker
+.docker/
+
+# System Files
+.DS_Store
+Thumbs.db
