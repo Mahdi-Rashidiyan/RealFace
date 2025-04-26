@@ -3,10 +3,22 @@
     "builds": [
         {
             "src": "realface/wsgi.py",
-            "use": "@vercel/python"
+            "use": "@vercel/python",
+            "config": {
+                "buildCommand": "chmod +x build.sh && ./build.sh",
+                "maxLambdaSize": "15mb"
+            }
         }
     ],
     "routes": [
+        {
+            "src": "/static/(.*)",
+            "dest": "/static/$1"
+        },
+        {
+            "src": "/media/(.*)",
+            "dest": "/media/$1"
+        },
         {
             "src": "/(.*)",
             "dest": "realface/wsgi.py"
