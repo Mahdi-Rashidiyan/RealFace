@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: realface
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn realface.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: DEBUG
+        value: false
+      - key: DJANGO_SETTINGS_MODULE
+        value: realface.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FERNET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:///db.sqlite3
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
