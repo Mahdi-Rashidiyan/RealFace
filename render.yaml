@@ -3,7 +3,7 @@ services:
     name: realface
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn realface.wsgi:application
+    startCommand: gunicorn realface.wsgi:application --workers 4 --worker-class=gthread --threads 2
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
@@ -17,7 +17,20 @@ services:
         generateValue: true
       - key: DATABASE_URL
         value: sqlite:///db.sqlite3
+      - key: SECURE_SSL_REDIRECT
+        value: true
+      - key: CSRF_COOKIE_SECURE
+        value: true
+      - key: SESSION_COOKIE_SECURE
+        value: true
     disk:
       name: data
       mountPath: /data
       sizeGB: 1
+    domains:
+      - realface.onrender.com
+    routes:
+      - type: redirect
+        source: http://realface.onrender.com/*
+        destination: https://realface.onrender.com/$1
+        status: 301

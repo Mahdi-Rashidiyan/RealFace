@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 import uuid
 import os
 from PIL import Image as PILImage
-import magic
+import mimetypes
 from .utils import optimize_image, get_image_dimensions
 
 def validate_image_file(upload):
@@ -11,14 +11,11 @@ def validate_image_file(upload):
     if upload.size > 10 * 1024 * 1024:
         raise ValidationError('Image file size must be under 10MB')
     
-    # Check file type using python-magic
+    # Check file type using mimetypes
     allowed_types = ['image/jpeg', 'image/png', 'image/webp']
-    file_type = magic.from_buffer(upload.read(1024), mime=True)
-    if file_type not in allowed_types:
+    file_type, _ = mimetypes.guess_type(upload.name)
+    if not file_type or file_type not in allowed_types:
         raise ValidationError('Unsupported file type. Please upload JPEG, PNG, or WebP images')
-    
-    # Reset file pointer
-    upload.seek(0)
     
     try:
         # Try opening the image to verify it's not corrupted

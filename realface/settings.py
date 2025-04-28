@@ -4,7 +4,6 @@ Django settings for realface project.
 from pathlib import Path
 from detector.utils import secure_settings
 import os
-from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,8 +14,8 @@ try:
     SECRET_KEY = secure_config['SECRET_KEY']
     FERNET_KEY = secure_config['FERNET_KEY']
 except:
-    SECRET_KEY = os.environ.get('SECRET_KEY', get_random_secret_key())
-    FERNET_KEY = os.environ.get('FERNET_KEY', get_random_secret_key())
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-development-key')
+    FERNET_KEY = os.environ.get('FERNET_KEY', 'development-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
@@ -44,7 +43,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'csp.middleware.CSPMiddleware',
-    'django_ratelimit.middleware.RatelimitMiddleware',  # Add rate limiting middleware
+    'django_ratelimit.middleware.RatelimitMiddleware',
 ]
 
 ROOT_URLCONF = 'realface.urls'
@@ -115,25 +114,35 @@ STATICFILES_DIRS = [
     BASE_DIR / 'detector' / 'static',
 ]
 
-# Add whitenoise middleware for static files
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'csp.middleware.CSPMiddleware',
-    'django_ratelimit.middleware.RatelimitMiddleware',  # Add rate limiting middleware
-]
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.environ.get('MEDIA_ROOT', BASE_DIR / 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Security Settings
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Content Security Policy with HTTPS
+CSP_DEFAULT_SRC = ("'self'", "https:")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com")
+CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net")
+CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
+CSP_FONT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
+CSP_UPGRADE_INSECURE_REQUESTS = True
+
+# Static and Media files with HTTPS
+STATIC_URL = 'https://' + ALLOWED_HOSTS[2] + '/static/' if not DEBUG else '/static/'
+MEDIA_URL = 'https://' + ALLOWED_HOSTS[2] + '/media/' if not DEBUG else '/media/'
 
 # Ensure logs directory exists
 LOGS_DIR = BASE_DIR / 'logs'
@@ -141,24 +150,6 @@ LOGS_DIR.mkdir(exist_ok=True)
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Security Settings
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = DEBUG is False
-SECURE_HSTS_SECONDS = 31536000 if DEBUG is False else None
-SECURE_HSTS_INCLUDE_SUBDOMAINS = DEBUG is False
-SECURE_HSTS_PRELOAD = DEBUG is False
-
-# Content Security Policy
-CSP_DEFAULT_SRC = ("'self'",)
-CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com")
-CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net")
-CSP_IMG_SRC = ("'self'", "data:", "blob:")
-CSP_FONT_SRC = ("'self'", "https://cdnjs.cloudflare.com")
 
 # Rate limiting settings
 RATELIMIT_VIEW = 'detector.views.analyze_image'
