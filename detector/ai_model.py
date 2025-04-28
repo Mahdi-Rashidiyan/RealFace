@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 class ImageAnalyzer:
     def __init__(self, model_path=None):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # Force CPU usage for Render deployment
+        self.device = torch.device('cpu')
         self.model = self._load_or_create_model(model_path)
         self.transform = transforms.Compose([
             transforms.Resize((224, 224)),
@@ -25,10 +26,8 @@ class ImageAnalyzer:
                 model_full_path = os.path.join(settings.BASE_DIR, model_path)
                 if os.path.exists(model_full_path):
                     logger.info(f"Loading model from {model_full_path}")
-                    if torch.cuda.is_available():
-                        return torch.load(model_full_path)
-                    else:
-                        return torch.load(model_full_path, map_location=self.device)
+                    # Always use CPU for model loading on Render
+                    return torch.load(model_full_path, map_location=self.device)
                 else:
                     logger.warning(f"Model path {model_full_path} not found, creating new model")
             return self._create_model()

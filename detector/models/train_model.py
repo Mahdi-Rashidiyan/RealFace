@@ -116,8 +116,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, num_epoch
     return model
 
 def main():
-    # Set device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Set device - force CPU for Render compatibility
+    device = torch.device('cpu')
     print(f'Using device: {device}')
     
     # Data transforms
