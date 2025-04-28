@@ -1,6 +1,7 @@
 # Python
-*.py[cod]
 __pycache__/
+*.py[cod]
+*$py.class
 *.so
 .Python
 env/
@@ -24,22 +25,25 @@ var/
 *.pot
 *.pyc
 db.sqlite3
-media
-static
+media/
+staticfiles/
 
-# Environment variables
-.env
-.venv
-.settings/
-.django_secret
-.fernet_key
+# Virtual Environment
+venv/
+ENV/
 
-# VS Code
+# IDE
+.idea/
 .vscode/
+*.swp
+*.swo
 
-# Docker
-.docker/
-
-# System Files
+# OS
 .DS_Store
 Thumbs.db
+
+# Project specific
+logs/
+.env
+*.pth
+detector/models/*.pth
