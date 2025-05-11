@@ -1,8 +1,9 @@
 from PIL import Image as PILImage
 import io
 from django.core.files.base import ContentFile
+import gc
 
-def optimize_image(image_file, max_size=(1200, 1200), quality=85):
+def optimize_image(image_file, max_size=(800, 800), quality=85):
     """
     Optimize an uploaded image for better performance while maintaining quality
     """
@@ -31,6 +32,11 @@ def optimize_image(image_file, max_size=(1200, 1200), quality=85):
     # Create new ContentFile from optimized image
     output.seek(0)
     content_file = ContentFile(output.read())
+    
+    # Clean up
+    img.close()
+    output.close()
+    gc.collect()
     
     return content_file, format.lower()
 

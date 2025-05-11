@@ -7,11 +7,21 @@ DEBUG = False
 # Set allowed hosts from environment variable
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
+# Get SQLite path from environment or use default
+SQLITE_PATH = os.environ.get('SQLITE_PATH', BASE_DIR)
+
+# Ensure directories exist
+import os
+os.makedirs(os.path.join(SQLITE_PATH, 'media'), exist_ok=True)
+
+# Register maintenance middleware for production
+MIDDLEWARE = ['detector.middleware.MaintenanceMiddleware'] + MIDDLEWARE
+
 # Database settings - Use SQLite with persistent storage on Render
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(os.environ.get('SQLITE_PATH', BASE_DIR), 'db.sqlite3'),
+        'NAME': os.path.join(SQLITE_PATH, 'db.sqlite3'),
     }
 }
 
@@ -22,6 +32,11 @@ CACHES = {
         'LOCATION': 'realface-prod-cache',
     }
 }
+
+# Memory optimization for limited environments like Render's free tier
+import sys
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
 
 # Security settings
 SECURE_SSL_REDIRECT = True
@@ -40,7 +55,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(os.environ.get('SQLITE_PATH', BASE_DIR), 'media')
+MEDIA_ROOT = os.path.join(SQLITE_PATH, 'media')
 
 # Logging - Use console logging for Render
 LOGGING = {

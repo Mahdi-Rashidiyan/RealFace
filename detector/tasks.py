@@ -5,6 +5,11 @@ from django.utils import timezone
 import threading
 import time
 import logging
+import os
+import datetime
+from django.core.management.base import BaseCommand
+from django.db.models import Q
+import gc
 
 logger = logging.getLogger(__name__)
 
@@ -175,3 +180,108 @@ class BackgroundTasks:
         }
 
 background_tasks = BackgroundTasks()
+
+def cleanup_old_images(days=7):
+    """
+    Clean up images older than specified days to free up storage space
+    """
+    from .models import Image
+    
+    try:
+        # Get date threshold
+        threshold_date = timezone.now() - datetime.timedelta(days=days)
+        
+        # Find old images that have been analyzed
+        old_images = Image.objects.filter(
+            uploaded_at__lt=threshold_date,
+            analysis_result__isnull=False
+        )
+        
+        # Delete them
+        count = old_images.count()
+        if count > 0:
+            for img in old_images:
+                img.delete()
+            logger.info(f"Successfully deleted {count} images older than {days} days (analyzed only)")
+        else:
+            logger.info(f"No images older than {days} days to delete")
+            
+        # Force garbage collection
+        gc.collect()
+            
+        return count
+    except Exception as e:
+        logger.error(f"Error in cleanup task: {str(e)}")
+        return 0
+        
+def cleanup_unanalyzed_images(hours=24):
+    """
+    Clean up unanalyzed images older than specified hours
+    """
+    from .models import Image
+    
+    try:
+        # Get date threshold
+        threshold_date = timezone.now() - datetime.timedelta(hours=hours)
+        
+        # Find old unanalyzed images
+        old_unanalyzed = Image.objects.filter(
+            uploaded_at__lt=threshold_date,
+            analysis_result__isnull=True
+        )
+        
+        # Delete them
+        count = old_unanalyzed.count()
+        if count > 0:
+            for img in old_unanalyzed:
+                img.delete()
+            logger.info(f"Successfully deleted {count} unanalyzed images older than {hours} hours")
+        else:
+            logger.info(f"No unanalyzed images older than {hours} hours to delete")
+            
+        # Force garbage collection
+        gc.collect()
+            
+        return count
+    except Exception as e:
+        logger.error(f"Error in cleanup task: {str(e)}")
+        return 0
+
+class Command(BaseCommand):
+    """
+    Management command to clean up old images
+    """
+    help = 'Clean up old images to free up storage'
+    
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--days', 
+            type=int, 
+            default=7,
+            help='Delete analyzed images older than this many days'
+        )
+        parser.add_argument(
+            '--hours', 
+            type=int, 
+            default=24,
+            help='Delete unanalyzed images older than this many hours'
+        )
+    
+    def handle(self, *args, **options):
+        days = options['days']
+        hours = options['hours']
+        
+        try:
+            count1 = cleanup_old_images(days)
+            count2 = cleanup_unanalyzed_images(hours)
+            
+            self.stdout.write(
+                self.style.SUCCESS(f'Successfully deleted {count1} analyzed images older than {days} days')
+            )
+            self.stdout.write(
+                self.style.SUCCESS(f'Successfully deleted {count2} unanalyzed images older than {hours} hours')
+            )
+        except Exception as e:
+            self.stderr.write(
+                self.style.ERROR(f'Error: {str(e)}')
+            )

@@ -1,6 +1,8 @@
 from django.http import HttpResponsePermanentRedirect
 from django.conf import settings
 import logging
+import random
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -32,3 +34,39 @@ class ProtocolRedirectMiddleware:
         
         # Otherwise, handle the request normally
         return self.get_response(request)
+
+class MaintenanceMiddleware:
+    """Middleware to perform occasional maintenance tasks"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.last_cleanup = datetime.now()
+        logger.info("MaintenanceMiddleware initialized")
+
+    def __call__(self, request):
+        # Run maintenance with low probability to avoid affecting every request
+        # Only run for non-static requests
+        if not request.path.startswith('/static/') and not request.path.startswith('/media/'):
+            # 1% chance of running cleanup to avoid impacting every request
+            if random.random() < 0.01:
+                self._run_cleanup()
+                
+        # Process request normally
+        return self.get_response(request)
+        
+    def _run_cleanup(self):
+        """Run maintenance tasks"""
+        try:
+            # Import here to avoid circular imports
+            from .tasks import cleanup_old_images, cleanup_unanalyzed_images
+            
+            # Clean up old images (7 days)
+            cleanup_old_images(days=7)
+            
+            # Clean up unanalyzed images (24 hours)
+            cleanup_unanalyzed_images(hours=24)
+            
+            # Update last cleanup time
+            self.last_cleanup = datetime.now()
+        except Exception as e:
+            logger.error(f"Error in cleanup task: {e}")

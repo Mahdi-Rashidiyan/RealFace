@@ -11,6 +11,8 @@ import os
 import logging
 import traceback
 import hashlib
+import psutil
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +63,39 @@ def debug_info(request):
     
     return render(request, 'detector/debug.html', context)
 
+def health_check(request):
+    """Health check endpoint for Render"""
+    # Check if media directory exists and is writeable
+    media_dir_exists = os.path.exists(settings.MEDIA_ROOT)
+    media_dir_writable = os.access(settings.MEDIA_ROOT, os.W_OK) if media_dir_exists else False
+    
+    # Get memory usage for debugging
+    memory_info = psutil.virtual_memory()
+    disk_info = psutil.disk_usage('/')
+    
+    health_data = {
+        'status': 'ok',
+        'message': 'Service is healthy',
+        'python_version': sys.version,
+        'media_directory': {
+            'path': settings.MEDIA_ROOT,
+            'exists': media_dir_exists,
+            'writable': media_dir_writable
+        },
+        'memory': {
+            'total_mb': round(memory_info.total / (1024 * 1024), 2),
+            'available_mb': round(memory_info.available / (1024 * 1024), 2),
+            'used_percent': memory_info.percent
+        },
+        'disk': {
+            'total_gb': round(disk_info.total / (1024 * 1024 * 1024), 2),
+            'free_gb': round(disk_info.free / (1024 * 1024 * 1024), 2),
+            'used_percent': disk_info.percent
+        }
+    }
+    
+    return JsonResponse(health_data)
+
 def get_image_hash(image_file):
     """Generate a hash for the image content"""
     hasher = hashlib.md5()
@@ -96,6 +131,14 @@ def analyze_image(request):
     image_file = request.FILES['image']
     
     try:
+        # Check file size for Render's free tier
+        max_size = 5 * 1024 * 1024  # 5MB for Render
+        if image_file.size > max_size:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Image file size exceeds the maximum allowed ({max_size/1024/1024:.1f}MB)'
+            }, status=400)
+            
         # Generate hash for the image content
         image_hash = get_image_hash(image_file)
         

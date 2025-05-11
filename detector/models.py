@@ -5,11 +5,12 @@ import os
 from PIL import Image as PILImage
 import mimetypes
 from .utils import optimize_image, get_image_dimensions
+import gc
 
 def validate_image_file(upload):
-    # Check file size (max 10MB)
-    if upload.size > 10 * 1024 * 1024:
-        raise ValidationError('Image file size must be under 10MB')
+    # Check file size (max 5MB for Render)
+    if upload.size > 5 * 1024 * 1024:
+        raise ValidationError('Image file size must be under 5MB')
     
     # Check file type using mimetypes
     allowed_types = ['image/jpeg', 'image/png', 'image/webp']
@@ -21,6 +22,10 @@ def validate_image_file(upload):
         # Try opening the image to verify it's not corrupted
         img = PILImage.open(upload)
         img.verify()
+        # Close the image to free memory
+        img.close()
+        # Force garbage collection
+        gc.collect()
     except Exception:
         raise ValidationError('Upload a valid image. The file you uploaded appears to be corrupted')
 
@@ -39,7 +44,7 @@ class Image(models.Model):
         upload_to=get_upload_path,
         max_length=255,
         validators=[validate_image_file],
-        help_text='Upload JPEG, PNG, or WebP images (max 10MB)'
+        help_text='Upload JPEG, PNG, or WebP images (max 5MB)'
     )
     uploaded_at = models.DateTimeField(auto_now_add=True)
     is_real = models.BooleanField(null=True)
@@ -58,7 +63,7 @@ class Image(models.Model):
 
             # Optimize image if it's a new upload
             if not self.id:
-                optimized_image, format = optimize_image(self.image)
+                optimized_image, format = optimize_image(self.image, max_size=(800, 800), quality=85)
                 self._optimized_format = format
                 self.image.file = optimized_image
 
@@ -69,6 +74,9 @@ class Image(models.Model):
                 self.image_width, self.image_height = dimensions
 
         super().save(*args, **kwargs)
+        
+        # Force garbage collection after save
+        gc.collect()
 
     def delete(self, *args, **kwargs):
         # Delete the image file when the model instance is deleted

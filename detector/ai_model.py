@@ -3,6 +3,7 @@ from torchvision import models, transforms
 from PIL import Image
 import numpy as np
 import os
+import gc
 from django.conf import settings
 import logging
 
@@ -12,12 +13,12 @@ class ImageAnalyzer:
     def __init__(self, model_path=None):
         # Force CPU usage for Render deployment
         self.device = torch.device('cpu')
-        self.model = self._load_or_create_model(model_path)
         self.transform = transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
+        self.model = self._load_or_create_model(model_path)
         logger.info(f"ImageAnalyzer initialized using device: {self.device}")
         
     def _load_or_create_model(self, model_path):
@@ -26,7 +27,7 @@ class ImageAnalyzer:
                 model_full_path = os.path.join(settings.BASE_DIR, model_path)
                 logger.info(f"Loading model from {model_full_path}")
                 
-                # Create model first
+                # Create model first - with minimal memory usage
                 model = self._create_model(initialize_weights=False)
                 
                 # Load state dict
@@ -35,45 +36,66 @@ class ImageAnalyzer:
                     state_dict = torch.load(model_full_path, map_location=self.device)
                     model.load_state_dict(state_dict)
                     logger.info("Successfully loaded model weights")
+                    
+                    # Force garbage collection to free memory
+                    gc.collect()
+                    torch.cuda.empty_cache()  # Won't hurt even on CPU
+                    
                     return model
+                    
                 except Exception as e:
                     logger.error(f"Error loading model weights: {e}")
                     logger.warning("IMPORTANT: Using an untrained model. Analysis results will be random.")
-                    return self._create_model()
+                    return self._create_model(memory_efficient=True)
             else:
                 if model_path:
                     logger.warning(f"Model path {os.path.join(settings.BASE_DIR, model_path)} not found, creating new model")
                 logger.warning("IMPORTANT: Using an untrained model. Analysis results will be random.")
                 logger.warning("Run the train_model.py script to create a properly trained model file.")
-                return self._create_model()
+                return self._create_model(memory_efficient=True)
         except Exception as e:
             logger.error(f"Error loading model: {e}, creating new model instead")
             logger.warning("IMPORTANT: Using an untrained model. Analysis results will be random.")
-            return self._create_model()
+            return self._create_model(memory_efficient=True)
     
-    def _create_model(self, initialize_weights=True):
+    def _create_model(self, initialize_weights=True, memory_efficient=False):
         logger.info("Creating new model")
-        # Use ResNet50 as base model
-        if initialize_weights:
-            model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
-        else:
-            model = models.resnet50(weights=None)
         
-        # Modify the final layer for binary classification
-        num_features = model.fc.in_features
-        model.fc = torch.nn.Sequential(
-            torch.nn.Linear(num_features, 1024),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(0.2),
-            torch.nn.Linear(1024, 1),
-            torch.nn.Sigmoid()
-        )
+        # Use lightweight model for Render's free tier if memory_efficient is True
+        if memory_efficient:
+            model = models.mobilenet_v2(weights=None)
+            # Modify the classifier for binary classification
+            model.classifier = torch.nn.Sequential(
+                torch.nn.Dropout(0.2),
+                torch.nn.Linear(model.last_channel, 1),
+                torch.nn.Sigmoid()
+            )
+        else:
+            # Use ResNet50 as base model with pretrained weights if requested
+            if initialize_weights:
+                model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+            else:
+                model = models.resnet50(weights=None)
+            
+            # Modify the final layer for binary classification
+            num_features = model.fc.in_features
+            model.fc = torch.nn.Sequential(
+                torch.nn.Linear(num_features, 1024),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.2),
+                torch.nn.Linear(1024, 1),
+                torch.nn.Sigmoid()
+            )
         
         # Move model to appropriate device (GPU/CPU)
         model = model.to(self.device)
         
         # Set model to evaluation mode
         model.eval()
+        
+        # Force garbage collection
+        gc.collect()
+        torch.cuda.empty_cache()  # Won't hurt even on CPU
         
         return model
     
@@ -99,6 +121,10 @@ class ImageAnalyzer:
                 img_tensor = self.preprocess_image(image_path)
                 prediction = self.model(img_tensor)
                 prob = prediction.item()
+                
+                # Clear memory
+                del img_tensor
+                gc.collect()
                 
                 return {
                     'is_real': bool(prob > 0.5),
