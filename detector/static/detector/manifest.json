@@ -1,0 +1,17 @@
+{
+  "name": "RealFace AI Detector",
+  "short_name": "RealFace",
+  "description": "Detect AI-generated or manipulated images",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007bff",
+  "icons": [
+    {
+      "src": "/static/detector/images/placeholder.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+} 

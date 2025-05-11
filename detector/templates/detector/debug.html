@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #3498db;
+            margin-top: 20px;
+        }
+        code {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-family: monospace;
+        }
+        pre {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 10px;
+            overflow: auto;
+        }
+        .info-box {
+            background: #ecf0f1;
+            border-left: 5px solid #3498db;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .warning-box {
+            background: #fcf8e3;
+            border-left: 5px solid #f39c12;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .success-box {
+            background: #e9f7ef;
+            border-left: 5px solid #27ae60;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .error-box {
+            background: #fdedeb;
+            border-left: 5px solid #c0392b;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        dl {
+            margin-left: 20px;
+        }
+        dt {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        dd {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>RealFace Development Server Debug Info</h1>
+
+    <div class="info-box">
+        <p>This page shows connection information to help debug HTTP/HTTPS issues. This page is only available in development mode.</p>
+    </div>
+
+    {% if debug_info.Protocol == "HTTPS" %}
+    <div class="warning-box">
+        <h2>⚠️ HTTPS Connection Detected</h2>
+        <p>You are currently using HTTPS, but the development server only supports HTTP. This may cause issues.</p>
+        <p>Please access this application using plain HTTP instead:</p>
+        <p><a href="http://{{ debug_info.Host }}{{ debug_info.Path }}">http://{{ debug_info.Host }}{{ debug_info.Path }}</a></p>
+    </div>
+    {% else %}
+    <div class="success-box">
+        <h2>✓ HTTP Connection Detected</h2>
+        <p>You are currently using HTTP, which is correct for local development.</p>
+    </div>
+    {% endif %}
+
+    <h2>Connection Information</h2>
+    <dl>
+        <dt>Protocol:</dt>
+        <dd><code>{{ debug_info.Protocol }}</code></dd>
+        
+        <dt>Host:</dt>
+        <dd><code>{{ debug_info.Host }}</code></dd>
+        
+        <dt>Path:</dt>
+        <dd><code>{{ debug_info.Path }}</code></dd>
+
+        <dt>Important Headers:</dt>
+        <dd>
+            <pre>{{ debug_info.Important_Headers|pprint }}</pre>
+        </dd>
+    </dl>
+
+    <h2>Django Settings</h2>
+    <pre>{{ debug_info.Django_Settings|pprint }}</pre>
+
+    <hr>
+    <p>
+        <a href="/">Return to Home</a>
+    </p>
+</body>
+</html> 

@@ -1,0 +1,101 @@
+/* Main styles for RealFace application */
+
+/* Upload area styling */
+.upload-area {
+    border: 2px dashed #adb5bd;
+    border-radius: 5px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.upload-area:hover {
+    border-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.upload-prompt {
+    color: #6c757d;
+}
+
+.upload-prompt i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+.preview-container {
+    max-height: 300px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+#preview-image {
+    max-height: 200px;
+    max-width: 100%;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.image-info {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Upload error styling */
+.upload-error {
+    display: flex;
+    align-items: center;
+}
+
+.upload-error i {
+    margin-right: 0.5rem;
+}
+
+/* Results styling */
+.result-content {
+    padding: 1rem 0;
+}
+
+.result-text {
+    font-weight: bold;
+}
+
+.result-text.real {
+    color: #28a745;
+}
+
+.result-text.ai {
+    color: #dc3545;
+}
+
+.confidence-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.technical-details {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .upload-area {
+        padding: 1.5rem;
+    }
+    
+    .upload-prompt i {
+        font-size: 2.5rem;
+    }
+} 

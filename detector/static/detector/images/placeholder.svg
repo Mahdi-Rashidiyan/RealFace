@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#007BFF"/>
+  <text x="256" y="256" font-family="Arial, sans-serif" font-size="64" 
+        font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">RF</text>
+  <text x="256" y="326" font-family="Arial, sans-serif" font-size="32" 
+        fill="white" text-anchor="middle" dominant-baseline="middle">RealFace</text>
+</svg> 

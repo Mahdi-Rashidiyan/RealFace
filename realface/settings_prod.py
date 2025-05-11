@@ -5,7 +5,7 @@ import os
 DEBUG = False
 
 # Set allowed hosts from environment variable
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 # Database settings - Use SQLite with persistent storage on Render
 DATABASES = {

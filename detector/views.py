@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.core.cache import cache
@@ -18,6 +18,48 @@ logger = logging.getLogger(__name__)
 def home(request):
     """Render the home page"""
     return render(request, 'detector/home.html')
+
+def debug_info(request):
+    """Development only view to help debug connection issues"""
+    if not settings.DEBUG:
+        return HttpResponse("Debug view only available in development mode", status=403)
+    
+    is_secure = request.is_secure()
+    protocol = "HTTPS" if is_secure else "HTTP"
+    
+    # Check headers
+    headers = dict(request.headers)
+    important_headers = {
+        'Host': headers.get('Host', 'Not set'),
+        'X-Forwarded-Proto': headers.get('X-Forwarded-Proto', 'Not set'),
+        'X-Forwarded-For': headers.get('X-Forwarded-For', 'Not set'),
+        'User-Agent': headers.get('User-Agent', 'Not set')
+    }
+    
+    # System info
+    debug_info = {
+        'Protocol': protocol,
+        'Is Secure': is_secure,
+        'Host': request.get_host(),
+        'Path': request.path,
+        'GET Parameters': dict(request.GET),
+        'Important Headers': important_headers,
+        'All Headers': headers,
+        'Django Settings': {
+            'DEBUG': settings.DEBUG,
+            'SECURE_SSL_REDIRECT': getattr(settings, 'SECURE_SSL_REDIRECT', 'Not set'),
+            'SESSION_COOKIE_SECURE': getattr(settings, 'SESSION_COOKIE_SECURE', 'Not set'),
+            'CSRF_COOKIE_SECURE': getattr(settings, 'CSRF_COOKIE_SECURE', 'Not set'),
+        }
+    }
+    
+    # Render debug template
+    context = {
+        'debug_info': debug_info,
+        'title': 'Connection Debug Info'
+    }
+    
+    return render(request, 'detector/debug.html', context)
 
 def get_image_hash(image_file):
     """Generate a hash for the image content"""

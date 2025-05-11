@@ -22,23 +22,42 @@ class ImageAnalyzer:
         
     def _load_or_create_model(self, model_path):
         try:
-            if model_path:
+            if model_path and os.path.exists(os.path.join(settings.BASE_DIR, model_path)):
                 model_full_path = os.path.join(settings.BASE_DIR, model_path)
-                if os.path.exists(model_full_path):
-                    logger.info(f"Loading model from {model_full_path}")
-                    # Always use CPU for model loading on Render
-                    return torch.load(model_full_path, map_location=self.device)
-                else:
-                    logger.warning(f"Model path {model_full_path} not found, creating new model")
-            return self._create_model()
+                logger.info(f"Loading model from {model_full_path}")
+                
+                # Create model first
+                model = self._create_model(initialize_weights=False)
+                
+                # Load state dict
+                try:
+                    # Load state_dict with the new weight_only=True (default in PyTorch 2.6+)
+                    state_dict = torch.load(model_full_path, map_location=self.device)
+                    model.load_state_dict(state_dict)
+                    logger.info("Successfully loaded model weights")
+                    return model
+                except Exception as e:
+                    logger.error(f"Error loading model weights: {e}")
+                    logger.warning("IMPORTANT: Using an untrained model. Analysis results will be random.")
+                    return self._create_model()
+            else:
+                if model_path:
+                    logger.warning(f"Model path {os.path.join(settings.BASE_DIR, model_path)} not found, creating new model")
+                logger.warning("IMPORTANT: Using an untrained model. Analysis results will be random.")
+                logger.warning("Run the train_model.py script to create a properly trained model file.")
+                return self._create_model()
         except Exception as e:
             logger.error(f"Error loading model: {e}, creating new model instead")
+            logger.warning("IMPORTANT: Using an untrained model. Analysis results will be random.")
             return self._create_model()
     
-    def _create_model(self):
+    def _create_model(self, initialize_weights=True):
         logger.info("Creating new model")
         # Use ResNet50 as base model
-        model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+        if initialize_weights:
+            model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+        else:
+            model = models.resnet50(weights=None)
         
         # Modify the final layer for binary classification
         num_features = model.fc.in_features
@@ -88,6 +107,12 @@ class ImageAnalyzer:
         except Exception as e:
             logger.error(f"Error analyzing image: {e}")
             return None
+
+# Create the models directory if it doesn't exist
+models_dir = os.path.join(settings.BASE_DIR, 'detector', 'models')
+if not os.path.exists(models_dir):
+    os.makedirs(models_dir)
+    logger.info(f"Created missing models directory: {models_dir}")
 
 # Initialize the model with pretrained weights
 MODEL_PATH = os.path.join('detector', 'models', 'realface_model.pth')
